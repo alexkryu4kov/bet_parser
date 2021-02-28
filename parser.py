@@ -1,3 +1,4 @@
+import os
 import time
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, asdict
@@ -377,31 +378,41 @@ def historical_match_data_parser(browser, url):
                 print(exc, link)
 
 
-def main():
+def league_parser(league_name):
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
     for key in headers:
         webdriver.DesiredCapabilities.FIREFOX['phantomjs.page.customHeaders.{}'.format(key)] = headers[key]
 
-    urls = [f'germany/2-bundesliga-201{i}-201{i+1}' for i in range(6, 9)]
-    urls.extend(['germany/2-bundesliga-2019-2020', 'germany/2-bundesliga'])
+    league = league_name.split('/')[0]
+    try:
+        os.makedirs(league)
+    except OSError:
+        pass
+
+    urls = [f'{league_name}-201{i}-201{i+1}' for i in range(6, 9)]
+    urls.extend([f'{league_name}-2019-2020', league_name])
 
     for url in urls:
-        browser = webdriver.Firefox(executable_path=GECKODRIVER_PATH)
-        historical_links_parser(browser, url)
         try:
-            browser.close()
+            browser = webdriver.Firefox(executable_path=GECKODRIVER_PATH)
+            historical_links_parser(browser, url)
+            try:
+                browser.close()
+            except Exception:
+                print('браузер уже закрыт')
+            browser = webdriver.Firefox(executable_path=GECKODRIVER_PATH)
+            historical_match_data_parser(browser, url)
+            try:
+                browser.close()
+            except Exception:
+                print('браузер уже закрыт')
+            save_to_csv(url)
         except Exception:
-            print('браузер уже закрыт')
-        browser = webdriver.Firefox(executable_path=GECKODRIVER_PATH)
-        historical_match_data_parser(browser, url)
-        try:
-            browser.close()
-        except Exception:
-            print('браузер уже закрыт')
-        save_to_csv(url)
+            print(f'Что-то не так с {url}')
+            continue
 
 
 if __name__ == '__main__':
     # today_parser()
-    main()
+    league_parser('andorra/primera-divisio')
     # date_parser('23_02_2021')
