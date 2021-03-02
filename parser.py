@@ -414,5 +414,5 @@ def league_parser(league_name):
 
 if __name__ == '__main__':
     # today_parser()
-    league_parser('andorra/primera-divisio')
+    league_parser('spain/copa-del-rey')
     # date_parser('23_02_2021')
