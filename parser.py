@@ -10,7 +10,7 @@ from selenium import webdriver
 from saver import save_to_csv
 
 
-GECKODRIVER_PATH = 'geckodriver'
+GECKODRIVER_PATH = 'geckodriver.exe'
 
 
 months = {
@@ -407,12 +407,14 @@ def league_parser(league_name):
             except Exception:
                 print('браузер уже закрыт')
             save_to_csv(url)
-        except Exception:
+        except Exception as e:
+            print(e)
             print(f'Что-то не так с {url}')
             continue
 
 
 if __name__ == '__main__':
     # today_parser()
-    league_parser('andorra/primera-divisio')
+    for league in ['england/league-two']:
+        league_parser(league)
     # date_parser('23_02_2021')
