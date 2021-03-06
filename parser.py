@@ -10,7 +10,7 @@ from selenium import webdriver
 from saver import save_to_csv
 
 
-GECKODRIVER_PATH = 'geckodriver.exe'
+GECKODRIVER_PATH = 'geckodriver'
 
 
 months = {
@@ -135,6 +135,7 @@ class ResultMatchInfo:
 class Parser:
 
     def __init__(self, browser, url):
+        self._url = url
         self._browser = browser
         self._results_url = f'{url}#1X2;2'
         self._amounts_url = f'{url}#over-under;2'
@@ -166,7 +167,7 @@ class Parser:
             under=under,
             yes=yes,
             no=no,
-            link=self._results_url
+            link=self._url,
         )
         )
 
@@ -208,7 +209,7 @@ class Parser:
             under=under,
             yes=yes,
             no=no,
-            link=self._results_url,
+            link=self._url,
             result=result,
             amount=amount,
             both=both,
@@ -335,25 +336,25 @@ def date_parser(date: str):
 
     data = pd.read_csv(f'{date}.csv')
     links = data['link'].values
+
     browser = webdriver.Firefox(executable_path=GECKODRIVER_PATH)
+
     with open(f'{date}_result_match_data.txt', 'a') as f:
         for link in links:
             link = str(link)
             parser = Parser(browser, link)
             try:
-                match_info = parser.get_only_result()
+                match_info = parser.get_historical_match_info()
                 print(match_info)
                 f.write(str(match_info) + '\n')
             except Exception as exc:
                 print(exc, link)
 
-    browser.close()
+    try:
+        browser.close()
+    except Exception:
+        print('браузер уже закрыт')
     save_to_csv(f'{date}_result')
-    data_result = pd.read_csv(f'{date}_result.csv')
-    data['result'] = data_result['result']
-    data['amount'] = data_result['amount']
-    data['both'] = data_result['both']
-    data.to_csv(f'{date}_full.csv', index=False)
 
 
 def historical_links_parser(browser, url):
@@ -415,6 +416,7 @@ def league_parser(league_name):
 
 if __name__ == '__main__':
     # today_parser()
-    for league in ['england/league-two']:
-        league_parser(league)
-    # date_parser('23_02_2021')
+    # for league in ['france/coupe-de-france']:
+    # league_parser(league)
+    for date in ['21_02_2021', '22_02_2021', '27_02_2021', '28_02_2021', '01_03_2021', '02_03_2021', '03_03_2021', '04_03_2021']:
+        date_parser(date)
